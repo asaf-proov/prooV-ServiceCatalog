@@ -1,0 +1,209 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Example Of Linux EC2 instance",
+	"Metadata": {
+		"AWS::CloudFormation::Interface": {
+			"ParametersGroup": [
+				{
+					"Label": {
+						"default": "EC2 Configuration"
+					},
+					"Parameters": [
+						"ImageId",
+						"PublicSubnetId",
+						"sgId",
+						"EbsSize",
+						"PemKeyName",
+						"InstanceSize",
+						"NameTagValue"
+					]
+				},
+				{
+					"Label": {
+						"default": "S3 Bucket Configuration"
+					},
+					"Parameters": [
+						"S3BucketName",
+						"BucketACL"
+					]
+				}
+			],
+			"ParameterLabels": {
+				"S3BucketName": {
+					"default": "S3 Bucket Name"
+				},
+				"NameTagValue": {
+					"default": "New machine Name tag"
+				},
+				"BucketACL": {
+					"default": "Bucket Access Control Configuration"
+				},
+				"ImageId": {
+					"default": "EC2 Image id"
+				},
+				"PublicSubnetId": {
+					"default": "Public subnet id"
+				},
+				"sgId": {
+					"default": "Security group id"
+				},
+				"EbsSize": {
+					"default": "Mounted disk size"
+				},
+				"PemKeyName": {
+					"default": "PEM key name"
+				},
+				"InstanceSize": {
+					"default": "EC2 Instance Size"
+				}
+			}
+		}
+	},
+	"Parameters": {
+		"BucketACL": {
+			"Type": "String",
+			"Default": "Private",
+			"AllowedValues": [
+				"Private",
+				"PublicRead",
+				"PublicReadWrite",
+				"AuthenticatedRead",
+				"LogDeliveryWrite",
+				"BucketOwnerRead",
+				"BucketOwnerFullControl",
+				"AwsExecRead"
+			],
+			"Description": "A canned access control list (ACL) that grants predefined permissions to the bucket"
+		},
+		"S3BucketName": {
+			"AllowedPattern": "(?=^.{3,63}$)(?!^(\\d+\\.)+\\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])$)",
+			"Type": "String",
+			"Default": "example-bucket"
+		},
+		"NameTagValue": {
+			"Type": "String",
+			"Default": "prooV EC2 Linux Example",
+			"Description": "Name Tag for the machine"
+		},
+		"ImageId": {
+			"Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+			"Default": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+		},
+		"PublicSubnetId": {
+			"Type": "AWS::EC2::Subnet::Id",
+			"Description": "Public subnet for the EC2 instance",
+			"ConstraintDescription": "Must be an exisiting subnet"
+		},
+		"sgId": {
+			"Type": "List<AWS::EC2::SecurityGroup::Id>",
+			"Description": "List of security group ids for the new instance",
+			"ConstraintDescription": "Security Group MUST be attached to the same VPC / Subnet chosen for the instance"
+		},
+		"EbsSize": {
+			"Type": "Number",
+			"MinValue": 20,
+			"Default": 50,
+			"MaxValue": 16384,
+			"Description": "Size of the created EBS in GB"
+		},
+		"PemKeyName": {
+			"Type": "AWS::EC2::KeyPair::KeyName",
+			"Description": "Pem Key Name",
+			"ConstraintDescription": "Must be an exisiting key in the account"
+		},
+		"InstanceSize": {
+			"AllowedValues": [
+				"t3.nano",
+				"t3.micro",
+				"t3.small",
+				"t3.medium",
+				"t3.large",
+				"t2.nano",
+				"t2.micro",
+				"t2.small",
+				"t2.medium",
+				"t2.large"
+			],
+			"Default": "t3.micro",
+			"Description": "Amazon EC2 Linux Instance Type",
+			"Type": "String"
+		}
+	},
+	"Resources": {
+		"S3Bucket": {
+			"Type": "AWS::S3::Bucket",
+			"Properties": {
+				"BucketName": {
+					"Ref": "S3BucketName"
+				},
+				"AccessControl": {
+					"Ref": "BucketACL"
+				}
+			}
+		},
+		"LinuxEC2Instance": {
+			"Type": "AWS::EC2::Instance",
+			"Properties": {
+				"Tags": [
+					{
+						"Key": "Name",
+						"Value": {
+							"Ref": "NameTagValue"
+						}
+					}
+				],
+				"ImageId": {
+					"Ref": "ImageId"
+				},
+				"InstanceType": {
+					"Ref": "InstanceSize"
+				},
+				"KeyName": {
+					"Ref": "PemKeyName"
+				},
+				"SecurityGroupIds": {
+					"Ref": "sgId"
+				},
+				"SubnetId": {
+					"Ref": "PublicSubnetId"
+				},
+				"BlockDeviceMappings": [
+					{
+						"DeviceName": "/dev/xvdh",
+						"Ebs": {
+							"Encrypted": true,
+							"VolumeSize": {
+								"Ref": "EbsSize"
+							}
+						}
+					}
+				]
+			}
+		},
+		"ElasticIP": {
+			"Type": "AWS::EC2::EIP",
+			"Properties": {
+				"InstanceId": {
+					"Ref": "LinuxEC2Instance"
+				}
+			}
+		}
+	},
+	"Outputs": {
+		"EC2Instanceid": {
+			"Value": {
+				"Ref": "LinuxEC2Instance"
+			}
+		},
+		"InstanceElasticIP": {
+			"Value": {
+				"Ref": "ElasticIP"
+			}
+		},
+		"NewBucketName": {
+			"Value": {
+				"Ref": "S3Bucket"
+			}
+		}
+	}
+}

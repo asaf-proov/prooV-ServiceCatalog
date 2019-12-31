@@ -1,0 +1,48 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Sqs sns cf.",
+	"Parameters": {
+		"topicName": {
+			"AllowedPattern":"^[a-zA-Z0-9](?:[A-Za-z0-9_-]{0,253}[a-zA-Z0-9])?$",
+			"Type": "String",
+			"Default": "prooV-example-topic"
+		},
+		"QueueUniqueName": {
+			"Type": "String",
+			"Default": "cf_queue"
+		}
+	},
+	"Resources": {
+		"snsTopic": {
+			"Type": "AWS::SNS::Topic",
+			"Properties": {
+				"TopicName": {
+					"Ref": "topicName"
+				}
+			}
+		},
+		"sqsQueue": {
+			"Type": "AWS::SQS::Queue",
+			"Properties": {
+				"QueueName": {
+					"Ref": "QueueUniqueName"
+				}
+			}
+		}
+	},
+	"Outputs": {
+		"SNS": {
+			"Value": {
+				"Ref": "snsTopic"
+			}
+		},
+		"SQS": {
+			"Value": {
+				"Ref": "sqsQueue"
+			}
+		},
+		"Test": {
+			"Value": "This is a simple output message"
+		}
+	}
+}
