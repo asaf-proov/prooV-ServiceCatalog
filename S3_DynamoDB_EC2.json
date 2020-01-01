@@ -169,8 +169,8 @@
       "ConstraintDescription": "Must be an exisiting subnet"
     },
     "sgId": {
-      "Type": "String",
-      "Description": "A comma seperated list of security groups",
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "Description": "List of security group ids for the new instance",
       "ConstraintDescription": "Security Group MUST be attached to the same VPC / Subnet chosen for the instance"
     },
     "EbsSize": {
@@ -271,7 +271,9 @@
         "KeyName": {
           "Ref": "PemKeyName"
         },
-        "SecurityGroupIds":{"Fn::Split" : [",",{"Ref":"sgId"}]},
+        "SecurityGroupIds": {
+          "Ref": "sgId"
+        },
         "SubnetId": {
           "Ref": "PublicSubnetId"
         },
