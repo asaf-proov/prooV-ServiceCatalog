@@ -1,6 +1,19 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "EMR cluster example",
+  "Mappings":{
+    "InstanceMap":{
+       "Small" : {
+        "InstanceType": "m1.medium"
+      },
+      "Medium" : {
+        "InstanceType": "c4.large"
+      },
+      "Large" : {
+        "InstanceType": "c4.8xlarge"
+      }
+    }
+  },
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterGroups": [
@@ -13,7 +26,7 @@
             "PublicSubnet",
             "KeyName",
             "MasterInstanceType",
-            "CoreInstanceType",
+            "ClusterSize",
             "ClusterName",
             "VPCID",
             "CoreNodeCount",
@@ -39,11 +52,8 @@
         "KeyName": {
           "default": "Pem Key Name for the cluster machines"
         },
-        "MasterInstanceType": {
-          "default": "Master Instance Type"
-        },
-        "CoreInstanceType": {
-          "default": "Core Instance Type"
+        "ClusterSize": {
+          "default": "Big,Medium or Small cluster"
         },
         "ClusterName": {
           "default": "Name of the new cluster"
@@ -89,7 +99,7 @@
     },
     "ReleaseLabel": {
       "Description": "Determines the version of open-source application packages installed on the cluster",
-      "Default": "emr-5.8.0",
+      "Default": "emr-5.7.0",
       "Type": "String",
       "AllowedValues": [
         "emr-5.23.0",
@@ -109,7 +119,7 @@
         "emr-5.10.0",
         "emr-5.9.0",
         "emr-5.8.1",
-        "emr-5.8.0"
+        "emr-5.7.0"
       ]
     },
     "ApplicationName": {
@@ -130,38 +140,29 @@
       "Description": "Name of an existing EC2 KeyPair to enable SSH access.",
       "Type": "AWS::EC2::KeyPair::KeyName"
     },
-    "MasterInstanceType": {
-      "Description": "Select the master node instance type.",
-      "Type": "String",
-      "Default": "m5.xlarge",
-      "AllowedValues": [
-        "m5.xlarge",
-        "m5.2xlarge",
-        "m5.4xlarge",
-        "m5.12xlarge",
-        "c5.xlarge",
-        "c5.2xlarge",
-        "c5.4xlarge"
-      ]
-    },
-    "CoreInstanceType": {
+    "ClusterSize": {
       "Description": "Select the core node instance type.",
       "Type": "String",
-      "Default": "m5.xlarge",
+      "Default": "Small",
       "AllowedValues": [
-        "m5.xlarge",
-        "m5.2xlarge",
-        "m5.4xlarge",
-        "m5.12xlarge",
-        "c5.xlarge",
-        "c5.2xlarge",
-        "c5.4xlarge"
+        "Small",
+        "Medium",
+        "High"
       ]
     },
     "ClusterName": {
       "Description": "Enter a name for your EMR cluster.",
       "Type": "String",
       "Default": "prooV-EMR-SC"
+    },
+    "ClusterLogPrefix":{
+      "Type":"String",
+      "Default":"/proov-emr"
+    },
+    "ClusterLogBucketName":{
+      "AllowedPattern":"(?=^.{3,63}$)(?!^(\\d+\\.)+\\d+$)(^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])$)",
+      "Type":"String",
+      "Default":"proov-sc-emr-logs"
     },
     "CreateLogBucket": {
       "Description": "Set to true to create the EMR Log bucket for this account. If false, then the existing bucket will be used.",
@@ -189,11 +190,11 @@
       "Condition": "CondCreateLogBucket",
       "Properties": {
         "BucketName": {
-          "Fn::Sub": "${AWS::StackName}-proov-sc-emr-logs"
+          "Ref": "ClusterLogBucketName"
         },
         "LoggingConfiguration": {
           "LogFilePrefix": {
-            "Fn::Sub": "s3://${AWS::StackName}-proov-sc-emr-logs/"
+            "Ref":"ClusterLogPrefix"
           }
         },
         "AccessControl": "LogDeliveryWrite"
@@ -274,7 +275,7 @@
           "MasterInstanceGroup": {
             "InstanceCount": 1,
             "InstanceType": {
-              "Ref": "MasterInstanceType"
+              "Fn::FindInMap":["InstanceMap",{"Ref":"ClusterSize"},"InstanceType"]
             },
             "Market": "ON_DEMAND",
             "Name": "Master"
@@ -289,7 +290,7 @@
               "Ref": "CoreInstanceCount"
             },
             "InstanceType": {
-              "Ref": "CoreInstanceType"
+              "Fn::FindInMap":["InstanceMap",{"Ref":"ClusterSize"},"InstanceType"]
             },
             "Market": "ON_DEMAND",
             "Name": "Core"
