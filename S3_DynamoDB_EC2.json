@@ -1,6 +1,19 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "Example Of Linux EC2 instance",
+  "Mappings":{
+    "DynamoDBAttType":{
+      "String":{
+        "AttType":"S"
+      },
+      "Number":{
+        "AttType":"N" 
+      },
+      "Binary":{
+        "AttType":"B"
+      }
+    }
+  },
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParametersGroup": [
@@ -108,9 +121,9 @@
     "TableAttType": {
       "Type": "String",
       "AllowedValues": [
-        "S",
-        "N",
-        "B"
+        "String",
+        "Number",
+        "Binary"
       ],
       "Description": "Attribute type: S for String, N for Number and B for Binary"
     },
@@ -169,8 +182,8 @@
       "ConstraintDescription": "Must be an exisiting subnet"
     },
     "sgId": {
-      "Type": "List<AWS::EC2::SecurityGroup::Id>",
-      "Description": "List of security group ids for the new instance",
+      "Type": "String",
+      "Description": "List of security group ids for the new instance, comma delimited list",
       "ConstraintDescription": "Security Group MUST be attached to the same VPC / Subnet chosen for the instance"
     },
     "EbsSize": {
@@ -224,7 +237,7 @@
               "Ref": "TableAttName"
             },
             "AttributeType": {
-              "Ref": "TableAttType"
+              "Fn::FindInMap":["DynamoDBAttType",{"Ref":"TableAttType"},"AttType"]
             }
           }
         ],
