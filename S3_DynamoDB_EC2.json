@@ -25,7 +25,7 @@
             "DynamoDBTableName",
             "TableAttName",
             "TableAttType",
-            "TabkeKeyType",
+            "TableKeyType",
             "TableReadUnits",
             "TableWriteUnits"
           ]
@@ -67,7 +67,7 @@
         "TableWriteUnits": {
           "default": "The maximum number of strongly consistent writes consumed per second"
         },
-        "TabkeKeyType": {
+        "TableKeyType": {
           "default": "The role that this key attribute will assume: HASH or RANGE"
         },
         "TableAttName": {
@@ -127,7 +127,7 @@
       ],
       "Description": "Attribute type: S for String, N for Number and B for Binary"
     },
-    "TabkeKeyType": {
+    "TableKeyType": {
       "Type": "String",
       "AllowedValues": [
         "HASH",
@@ -173,8 +173,8 @@
       "Description": "Name Tag for the machine"
     },
     "ImageId": {
-      "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
-      "Default": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+      "Type": "String",
+      "Default": "ami-0e8c04af2729ff1bb"
     },
     "PublicSubnetId": {
       "Type": "AWS::EC2::Subnet::Id",
@@ -247,7 +247,7 @@
               "Ref": "TableAttName"
             },
             "KeyType": {
-              "Ref": "TabkeKeyType"
+              "Ref": "TableKeyType"
             }
           }
         ],
@@ -285,7 +285,10 @@
           "Ref": "PemKeyName"
         },
         "SecurityGroupIds": {
-          "Ref": "sgId"
+          "Fn::Split":[
+				",",
+				{"Ref": "sgId"}
+			]
         },
         "SubnetId": {
           "Ref": "PublicSubnetId"

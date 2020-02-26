@@ -86,8 +86,8 @@
 			"Description": "Name Tag for the machine"
 		},
 		"ImageId": {
-			"Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
-			"Default": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+			"Type": "String",
+			"Default": "ami-0e8c04af2729ff1bb"
 		},
 		"PublicSubnetId": {
 			"Type": "AWS::EC2::Subnet::Id",
@@ -162,7 +162,10 @@
 					"Ref": "PemKeyName"
 				},
 				"SecurityGroupIds": {
-					"Ref": "sgId"
+					"Fn::Split":[
+						",",
+						{"Ref": "sgId"}
+					]
 				},
 				"SubnetId": {
 					"Ref": "PublicSubnetId"

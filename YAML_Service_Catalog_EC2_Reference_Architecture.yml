@@ -90,8 +90,8 @@ Parameters:
     Description: Name of existing EC2 key pair for Linux Instances
     Type: AWS::EC2::KeyPair::KeyName
   LatestAmiId:
-    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: ami-0e8c04af2729ff1bb
+    Type: String
   LinuxInstanceType:
     AllowedValues:
     - t3.nano

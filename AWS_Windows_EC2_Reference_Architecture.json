@@ -188,9 +188,9 @@
 
         "LatestAmiId": {
 
-            "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+            "Type": "String",
 
-            "Default": "/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base"
+            "Default": "ami-0d7d80db021ba0d11"
 
         }
 
